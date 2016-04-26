@@ -255,6 +255,23 @@ WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = 
 );
 
 -- PROJEKT 4
+-- -------------------------------------------------------------
+-- ------------------UDELENI PRAV-------------------------------
+-- -------------------------------------------------------------
+GRANT ALL ON POJISTOVNA TO xkrajn00;
+GRANT ALL ON PACIENT TO xkrajn00;
+GRANT ALL ON EXTERNI TO xkrajn00;
+GRANT ALL ON VYKON TO xkrajn00;
+GRANT ALL ON TERMIN TO xkrajn00;
+GRANT ALL ON FAKTURA TO xkrajn00;
+GRANT ALL ON LEK TO xkrajn00;
+GRANT ALL ON TERMIN_VYKON TO xkrajn00;
+GRANT ALL ON TERMIN_LEK TO xkrajn00;
+
+-- TODO: pridat EXECUTION prava
+-- -------------------------------------------------------------
+-- -------------MATERIALIZOVANY POHLED -------------------------
+-- -------------------------------------------------------------
 -- smazani logu pro materializovany pohled
 DROP MATERIALIZED VIEW pojistovnaNahled;
 DROP MATERIALIZED VIEW LOG ON FAKTURA;
