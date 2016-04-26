@@ -253,3 +253,53 @@ WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = 
 	FROM PACIENT p, TERMIN n, TERMIN_VYKON tv, VYKON v
 	WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND v.nazev LIKE 'Prohlídka'
 );
+
+-- PROJEKT 4
+-- smazani logu pro materializovany pohled
+DROP MATERIALIZED VIEW pojistovnaNahled;
+DROP MATERIALIZED VIEW LOG ON FAKTURA;
+DROP MATERIALIZED VIEW LOG ON TERMIN;
+DROP MATERIALIZED VIEW LOG ON PACIENT;
+
+-- vytvoreni logu pro materializovany pohled
+CREATE MATERIALIZED VIEW LOG ON PACIENT
+   WITH ROWID, SEQUENCE (ID_RC)
+   INCLUDING NEW VALUES;
+CREATE MATERIALIZED VIEW LOG ON TERMIN
+   WITH ROWID, SEQUENCE (ID_TERMINU)
+   INCLUDING NEW VALUES;
+CREATE MATERIALIZED VIEW LOG ON FAKTURA
+   WITH ROWID, SEQUENCE (ID_FAKTURY)
+   INCLUDING NEW VALUES;
+
+-- ucel materializovaneho pohledu:
+--     Vseobecna zdravotni pojistovna (pro nas uzivatel: xkrajn02) ma prehled o
+--     vsech fakturach na svoje klienty vystavene v nasi ordinaci.
+--     Pohled se zmeni pri kazdem commitu (tzn. po pridani faktury)
+CREATE MATERIALIZED VIEW pojistovnaNahled
+   LOGGING
+   CACHE
+   BUILD IMMEDIATE
+   REFRESH ON COMMIT
+   ENABLE QUERY REWRITE
+AS
+SELECT
+   P.ID_RC AS "Rodne cislo",
+	 P.JMENO, P.PRIJMENI,
+   F.ID_FAKTURY AS "ID Faktury",
+   F.DATUM , F.CENA, F.DOPLATEK
+FROM  PACIENT P, FAKTURA F, TERMIN T
+WHERE
+   P.ID_RC = T.ID_PACIENT AND
+   F.ID_TERMINU = T.ID_TERMINU AND
+   P.ID_POJISTOVNA = '111';
+
+-- pridani prav uzivateli xkrajn02 (pojistovne)
+GRANT ALL ON pojistovnaNahled to XKRAJN02;
+-- vypis materializovaneho pohledu
+SELECT * FROM pojistovnaNahled;
+-- pridani nove faktury
+INSERT INTO FAKTURA VALUES(faktura_seq.nextval, TO_DATE('08082016','DD-MM-YYYY'), 500, 200, 9);
+COMMIT;
+-- znovu vypis materializovaneho pohledu, mel by byt pridan zaznam
+SELECT * FROM pojistovnaNahled;
