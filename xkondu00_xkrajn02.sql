@@ -143,7 +143,7 @@ INSERT INTO EXTERNI VALUES(extern_seq.nextval, SYSDATE, 'Počítačová tomograf
 INSERT INTO EXTERNI VALUES(extern_seq.nextval, SYSDATE, 'Odběr plazmy' ,'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.','8660030621' );
 
 INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Očkování', 365);
-INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Pŕehlídka', 365);
+INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Prohlídka', 365);
 INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Odběr krve', 182);
 INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Prědpis léku', NULL );
 
@@ -243,11 +243,7 @@ HAVING SUM(pocet_baleni) >= ALL
 -- vypise pacienty narozene v 10 mesici, za ucelem dostaveni na rocni prehlidku
 SELECT p.jmeno AS "Jméno", p.prijmeni AS "Příjmení"
 FROM PACIENT p
-WHERE p.id_rc IN
-( SELECT p.id_rc
-  FROM Pacient p
-  WHERE  EXTRACT (MONTH FROM p.datum_narozeni) = 10
-);
+WHERE WHERE  EXTRACT (MONTH FROM p.datum_narozeni) = 10;
 
 -- vypis pacientu, ktery za soucasny rok neabsolvovaly prohlidku
 SELECT DISTINCT p.jmeno AS "Jméno", p.prijmeni AS "Příjmení"
@@ -255,5 +251,5 @@ FROM PACIENT p, TERMIN n, TERMIN_VYKON tv, VYKON v
 WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND EXTRACT(YEAR FROM n.datum_cas) = EXTRACT(YEAR FROM CURRENT_DATE) AND p.id_rc NOT IN
 (	SELECT DISTINCT p.id_rc
 	FROM PACIENT p, TERMIN n, TERMIN_VYKON tv, VYKON v
-	WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND v.nazev LIKE 'Pŕehlídka'
+	WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND v.nazev LIKE 'Prohlídka'
 );
