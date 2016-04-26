@@ -256,6 +256,37 @@ WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = 
 
 -- PROJEKT 4
 -- -------------------------------------------------------------
+-- ------------------EXPLAIN PLAN ------------------------------
+-- --------------------INDEX------------------------------------
+----------------------------------------------------------------
+-- smazat index pokud existuje
+DROP INDEX DRUH_LEKU;
+
+-- klasicky vypis:
+-- druhy leku a pocet predepsnaych krabicek daneho druhu
+EXPLAIN PLAN FOR
+SELECT L.DRUH, SUM(TL.POCET_BALENI) FROM LEK L
+NATURAL JOIN TERMIN_LEK TL
+GROUP BY (L.DRUH);
+
+-- vypis defaultniho planu na select
+SELECT * FROM TABLE(DBMS_XPLAN.display);
+
+-- vytvoreni indexu pro druh leku
+CREATE INDEX DRUH_LEKU ON LEK (DRUH);
+
+-- novy plan s vyuzitim indexu
+EXPLAIN PLAN FOR
+SELECT /*+ INDEX(LEK DRUH_LEKU)*/ L.DRUH, SUM(TL.POCET_BALENI) FROM LEK L
+NATURAL JOIN TERMIN_LEK TL
+GROUP BY (L.DRUH);
+
+-- vypis planu pri uziti indexu
+-- sice se zvysil pocet operace ale narocnost novych operaci je nizsi
+--   predevsim pro plnejsi tabulky
+SELECT * FROM TABLE(DBMS_XPLAN.display);
+
+-- -------------------------------------------------------------
 -- ------------------UDELENI PRAV-------------------------------
 -- -------------------------------------------------------------
 GRANT ALL ON POJISTOVNA TO xkrajn00;
