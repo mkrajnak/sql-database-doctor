@@ -289,15 +289,15 @@ SELECT * FROM TABLE(DBMS_XPLAN.display);
 -- -------------------------------------------------------------
 -- ------------------UDELENI PRAV-------------------------------
 -- -------------------------------------------------------------
-GRANT ALL ON POJISTOVNA TO xkrajn00;
-GRANT ALL ON PACIENT TO xkrajn00;
-GRANT ALL ON EXTERNI TO xkrajn00;
-GRANT ALL ON VYKON TO xkrajn00;
-GRANT ALL ON TERMIN TO xkrajn00;
-GRANT ALL ON FAKTURA TO xkrajn00;
-GRANT ALL ON LEK TO xkrajn00;
-GRANT ALL ON TERMIN_VYKON TO xkrajn00;
-GRANT ALL ON TERMIN_LEK TO xkrajn00;
+GRANT ALL ON POJISTOVNA TO xkrajn02;
+GRANT ALL ON PACIENT TO xkrajn02;
+GRANT ALL ON EXTERNI TO xkrajn02;
+GRANT ALL ON VYKON TO xkrajn02;
+GRANT ALL ON TERMIN TO xkrajn02;
+GRANT ALL ON FAKTURA TO xkrajn02;
+GRANT ALL ON LEK TO xkrajn02;
+GRANT ALL ON TERMIN_VYKON TO xkrajn02;
+GRANT ALL ON TERMIN_LEK TO xkrajn02;
 
 -- TODO: pridat EXECUTION prava
 -- -------------------------------------------------------------
