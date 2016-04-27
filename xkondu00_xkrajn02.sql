@@ -97,6 +97,35 @@ CREATE TABLE TERMIN_LEK (
 	ID_LEKU			INT NOT NULL,
 	POCET_BALENI	INT NOT NULL
 );
+-- -----------------------------------
+-- -----------TRIGGERY----------------
+-- -----------------------------------
+-- rodne cislo
+CREATE OR REPLACE TRIGGER RODNE_CISLO
+  BEFORE INSERT OR UPDATE OF ID_RC ON PACIENT
+  FOR EACH ROW
+DECLARE
+  RC PACIENT.ID_RC%TYPE;
+  FIRST_SIX INTEGER;
+  ALL_TEN INTEGER;
+  MESIC INTEGER;
+  DATE_CHECH DATE;
+BEGIN
+  RC:= :NEW.ID_RC;
+  FIRST_SIX:= TO_NUMBER(SUBSTR(RC, 1, 6));
+  MESIC:= TO_NUMBER(SUBSTR(RC, 3, 2));
+  ALL_TEN:= TO_NUMBER(RC); -- FAIL: kdyz nejsou vse cisla
+  IF(MESIC > 49) THEN -- pro zeny se odecte 50 na porovnani data
+    FIRST_SIX:= FIRST_SIX - 5000;
+  END IF;
+  DATE_CHECH:= TO_DATE(FIRST_SIX,'YYMMDD'); -- FAIL: kdyz kdyz neni validni datum
+  IF(round(RC/11.0) <> RC/11.0) THEN
+	  -- FAIL: kdyz neni delitelne 11
+    Raise_Application_Error (-20001, 'Rodne cislo neni delitelne 11');
+  END IF;
+END RODNE_CISLO ;
+/
+
 
 -- vytvoreni primarnich klicu
 ALTER TABLE PACIENT ADD CONSTRAINT PK_PACIENT PRIMARY KEY (ID_RC);
