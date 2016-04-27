@@ -394,3 +394,40 @@ INSERT INTO FAKTURA VALUES(faktura_seq.nextval, TO_DATE('08082016','DD-MM-YYYY')
 COMMIT;
 -- znovu vypis materializovaneho pohledu, mel by byt pridan zaznam
 SELECT * FROM pojistovnaNahled;
+-- -------------------------------------------------------------
+-- ------------------PROCEDURY--- ------------------------------
+-- -------------------------------------------------------------
+SET serveroutput ON;
+CREATE OR REPLACE PROCEDURE rocniZuctovani(cislo_pojistovny IN VARCHAR2, rok in VARCHAR2 )
+is
+  cursor zaznam is
+    SELECt *
+    FROM POJISTOVNA JOIN PACIENT ON POJISTOVNA.ID_CP = pacient.id_pojistovna
+      JOIN TERMIN  ON PACIENT.ID_RC = TERMIN.ID_PACIENT
+      JOIN FAKTURA ON TERMIN.ID_TERMINU = FAKTURA.ID_TERMINU
+      WHERE cislo_pojistovny = POJISTOVNA.ID_CP AND
+        EXTRACT (YEAR FROM TERMIN.DATUM_CAS) = rok;
+    p_zaznam zaznam%ROWTYPE;
+    rocni_doplatky NUMBER;
+    rocni_ceny NUMBER;
+    jmeno_pojistovny POJISTOVNA.JMENO%TYPE;
+BEGIN
+  SELECT JMENO INTO jmeno_pojistovny FROM POJISTOVNA WHERE ID_CP = cislo_pojistovny;
+  rocni_doplatky := 0;
+  rocni_ceny := 0;
+
+  OPEN zaznam;
+  LOOP
+    FETCH ZAZNAM INTO P_ZAZNAM;
+    EXIT WHEN zaznam%NOTFOUND;
+    rocni_doplatky := rocni_doplatky + P_ZAZNAM.DOPLATEK;
+    rocni_ceny := rocni_ceny + P_ZAZNAM.CENA;
+  END LOOP;
+  CLOSE zaznam;
+  dbms_output.put_line('Pojistovna: '|| jmeno_pojistovny || '.');
+  dbms_output.put_line('Cena vysetreni pro rok ' || rok || ' je ' || rocni_ceny || '.');
+  dbms_output.put_line('Doplatek za vysetreni pro rok ' || rok || ' je ' || rocni_doplatky || '.');
+END;
+/
+-- demonstracia procedury
+exec rocniZuctovani('111','2016');
