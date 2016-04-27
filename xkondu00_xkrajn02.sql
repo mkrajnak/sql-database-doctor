@@ -243,7 +243,7 @@ HAVING SUM(pocet_baleni) >= ALL
 -- vypise pacienty narozene v 10 mesici, za ucelem dostaveni na rocni prehlidku
 SELECT p.jmeno AS "Jméno", p.prijmeni AS "Příjmení"
 FROM PACIENT p
-WHERE WHERE  EXTRACT (MONTH FROM p.datum_narozeni) = 10;
+WHERE  EXTRACT (MONTH FROM p.datum_narozeni) = 10;
 
 -- vypis pacientu, ktery za soucasny rok neabsolvovaly prohlidku
 SELECT DISTINCT p.jmeno AS "Jméno", p.prijmeni AS "Příjmení"
