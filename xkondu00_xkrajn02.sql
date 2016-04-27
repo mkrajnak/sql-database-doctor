@@ -125,7 +125,20 @@ BEGIN
   END IF;
 END RODNE_CISLO ;
 /
-
+-- AUTOINKREMENTACE ID v tabulce LEK
+-- pouze pokud NULL, kdyz zadana tak se pouzije
+CREATE OR REPLACE TRIGGER ID_LEKU_INC
+  BEFORE INSERT OR UPDATE OF ID_LEKU ON LEK
+  FOR EACH ROW
+DECLARE
+  ID_NEW INTEGER;
+BEGIN
+  ID_NEW:= :NEW.ID_LEKU;
+  IF (ID_NEW is NULL) THEN
+     :new.ID_LEKU := lek_seq.nextval;
+  END IF;
+END ID_LEKU_INC;
+/
 
 -- vytvoreni primarnich klicu
 ALTER TABLE PACIENT ADD CONSTRAINT PK_PACIENT PRIMARY KEY (ID_RC);
@@ -194,7 +207,8 @@ INSERT INTO LEK VALUES(lek_seq.nextval, 'Dietetické potraviny','APROMIX','1x100
 INSERT INTO LEK VALUES(lek_seq.nextval, 'KLACID 500','Antibiotiká', 'tbl flm 14x500 mg');
 INSERT INTO LEK VALUES(lek_seq.nextval, 'OSPEN 1000','Antibiotiká', 'tbl obd 12x375 mg');
 INSERT INTO LEK VALUES(lek_seq.nextval, 'LEKOPTIN','Gynekologiká ', 'tbl flm 112 (4 mg/1000 mg)');
-INSERT INTO LEK VALUES(lek_seq.nextval, 'FRAMYKOIN','Antibiotiká','1x1000 g');
+-- test triggeru
+INSERT INTO LEK VALUES(NULL, 'FRAMYKOIN','Antibiotiká','1x1000 g');
 
 INSERT INTO FAKTURA VALUES(faktura_seq.nextval, TO_DATE('01042016','DD-MM-YYYY'), 800, 0, 1);
 INSERT INTO FAKTURA VALUES(faktura_seq.nextval, TO_DATE('02042016','DD-MM-YYYY'), 600, 300, 2);
