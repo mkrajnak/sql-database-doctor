@@ -187,7 +187,7 @@ INSERT INTO EXTERNI VALUES(extern_seq.nextval, SYSDATE, 'Odběr plazmy' ,'Lorem 
 INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Očkování', 365);
 INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Prohlídka', 365);
 INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Odběr krve', 182);
-INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Prědpis léku', NULL );
+INSERT INTO VYKON VALUES(vykon_seq.nextval, 'Předpis léku', NULL );
 
 INSERT INTO TERMIN VALUES(termin_seq.nextval, TIMESTAMP '2016-04-01 09:00:00', 1, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.','8811050622');
 INSERT INTO TERMIN VALUES(termin_seq.nextval, TIMESTAMP '2016-04-01 10:00:00', 1, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.','8660030621');
@@ -268,8 +268,7 @@ WHERE (l.pocet_baleni >= 2 AND lek.druh = 'Antibiotikum');
 -- vypis pacientu, ktery byli ockovani spolu s datumem ockovani a expiraci
 SELECT p.jmeno AS "Jméno", p.prijmeni AS "Příjmení", t.datum_cas AS "Datum a čas", v.expirace AS "Expirace"
 FROM PACIENT p JOIN termin t ON t.id_pacient = p.id_rc join TERMIN_VYKON tv on tv.id_terminu = t.id_terminu join vykon v on v.id_vykonu = tv.id_vykonu
-WHERE EXISTS (SELECT * FROM VYKON
- 							WHERE v.NAZEV_VYKONU LIKE 'Očkování');
+WHERE EXISTS (SELECT * FROM VYKON WHERE v.NAZEV_VYKONU LIKE 'Očkování');
 
 -- vypise lek ktereho se predepsalo nejvice krabicek
 SELECT lek.nazev AS "Název léku" , SUM(pocet_baleni) AS Pocet_baleni
@@ -303,7 +302,7 @@ WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = 
 -- --------------------INDEX------------------------------------
 ----------------------------------------------------------------
 -- smazat index pokud existuje
-DROP INDEX DRUH_LEKU;
+-- DROP INDEX DRUH_LEKU;
 
 -- klasicky vypis:
 -- druhy leku a pocet predepsnaych krabicek daneho druhu
@@ -342,15 +341,15 @@ GRANT ALL ON LEK TO xkrajn02;
 GRANT ALL ON TERMIN_VYKON TO xkrajn02;
 GRANT ALL ON TERMIN_LEK TO xkrajn02;
 
--- TODO: pridat EXECUTION prava
+
 -- -------------------------------------------------------------
 -- -------------MATERIALIZOVANY POHLED -------------------------
 -- -------------------------------------------------------------
 -- smazani logu pro materializovany pohled
 DROP MATERIALIZED VIEW pojistovnaNahled;
-DROP MATERIALIZED VIEW LOG ON FAKTURA;
-DROP MATERIALIZED VIEW LOG ON TERMIN;
-DROP MATERIALIZED VIEW LOG ON PACIENT;
+-- DROP MATERIALIZED VIEW LOG ON FAKTURA;
+-- DROP MATERIALIZED VIEW LOG ON TERMIN;
+-- DROP MATERIALIZED VIEW LOG ON PACIENT;
 
 -- vytvoreni logu pro materializovany pohled
 CREATE MATERIALIZED VIEW LOG ON PACIENT
@@ -386,6 +385,8 @@ WHERE
    P.ID_POJISTOVNA = '111';
 
 -- pridani prav uzivateli xkrajn02 (pojistovne)
+-- uzivatel xkrajn02 pristupuje k pohledu:
+--    SELECT * FROM xkondu00.pojistovnaNahled;
 GRANT ALL ON pojistovnaNahled to XKRAJN02;
 -- vypis materializovaneho pohledu
 SELECT * FROM pojistovnaNahled;
@@ -434,8 +435,9 @@ EXCEPTION
 	  WHEN OTHERS THEN
 	    Raise_Application_Error (-20206, 'Error!');
 END;
-
+/
 -- demonstracia procedury
+GRANT EXECUTE ON rocniZuctovani TO xkrajn02;
 exec rocniZuctovani('111','2016');
 
 -----------------------------PROCEDURA 2---------------------------------------
@@ -475,7 +477,8 @@ EXCEPTION
 	  WHEN OTHERS THEN
 	    Raise_Application_Error (-20206, 'Error!');
 END;
-
+/
 -- demostracia procedury
+GRANT EXECUTE ON analyzaDruhuLeku TO xkrajn02;
 exec analyzaDruhuLeku('Antibiotikum');
 -------------------------------------------------------------------------------
