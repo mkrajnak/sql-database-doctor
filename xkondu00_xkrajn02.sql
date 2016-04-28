@@ -302,39 +302,33 @@ WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = 
 -- --------------------INDEX------------------------------------
 ----------------------------------------------------------------
 -- smazat index pokud existuje
--- DROP INDEX DRUH_LEKU;
+-- DROP INDEX INDEX_MESTA;
 
 -- klasicky vypis:
--- druhy leku a pocet predepsnaych krabicek daneho druhu
-DROP INDEX DRUH_LEKU;
-
--- klasicky vypis:
--- druhy leku a pocet predepsnaych krabicek daneho druhu
-DROP INDEX DRUH_LEKU;
-
--- klasicky vypis:
--- druhy leku a pocet predepsnaych krabicek daneho druhu
-EXPLAIN PLAN FOR
-SELECT DRUH, SUM(POCET_BALENI) FROM LEK
-NATURAL JOIN TERMIN_LEK
-GROUP BY DRUH, POCET_BALENI;
+-- pocet pacientu jednotlivych pojistoven v praze
+EXPLAIN PLAN SET STATEMENT_ID 'without_index' FOR
+SELECT POJ.JMENO, COUNT(PAC.MESTO) FROM POJISTOVNA POJ, PACIENT PAC
+WHERE POJ.ID_CP = PAC.ID_POJISTOVNA AND
+PAC.MESTO = 'Praha'
+GROUP BY POJ.JMENO;
 
 -- vypis defaultniho planu na select
-SELECT * FROM TABLE(DBMS_XPLAN.display);
+SELECT * FROM TABLE(DBMS_XPLAN.display('plan_table', 'without_index', 'typical'));
 
--- vytvoreni indexu pro druh leku
-CREATE INDEX DRUH_LEKU ON LEK (DRUH);
+-- vytvoreni indexu pro mesta
+CREATE INDEX INDEX_MESTA ON PACIENT (MESTO);
 
 -- novy plan s vyuzitim indexu
-EXPLAIN PLAN FOR
-SELECT /*+ INDEX(LEK DRUH_LEKU)*/ DRUH, SUM(POCET_BALENI) FROM LEK
-NATURAL JOIN TERMIN_LEK
-GROUP BY DRUH, POCET_BALENI;
+EXPLAIN PLAN SET STATEMENT_ID 'with_index'FOR
+SELECT /* INDEX(PACIENT INDEX_MESTA)*/ POJ.JMENO, COUNT(PAC.MESTO) FROM POJISTOVNA POJ, PACIENT PAC
+WHERE POJ.ID_CP = PAC.ID_POJISTOVNA AND
+PAC.MESTO = 'Praha'
+GROUP BY POJ.JMENO;
 
 -- vypis planu pri uziti indexu
 -- sice se zvysil pocet operace ale narocnost novych operaci je nizsi
 --   predevsim pro plnejsi tabulky
-SELECT * FROM TABLE(DBMS_XPLAN.display);
+SELECT * FROM TABLE(DBMS_XPLAN.display('plan_table', 'with_index', 'typical'));
 
 -- -------------------------------------------------------------
 -- ------------------UDELENI PRAV-------------------------------
