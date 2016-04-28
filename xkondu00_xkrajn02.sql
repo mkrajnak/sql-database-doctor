@@ -475,5 +475,7 @@ EXCEPTION
 	  WHEN OTHERS THEN
 	    Raise_Application_Error (-20206, 'Error!');
 END;
-/
+
+-- demostracia procedury
 exec analyzaDruhuLeku('Antibiotikum');
+-------------------------------------------------------------------------------
