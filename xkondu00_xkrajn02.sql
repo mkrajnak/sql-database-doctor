@@ -310,10 +310,14 @@ DROP INDEX DRUH_LEKU;
 
 -- klasicky vypis:
 -- druhy leku a pocet predepsnaych krabicek daneho druhu
+DROP INDEX DRUH_LEKU;
+
+-- klasicky vypis:
+-- druhy leku a pocet predepsnaych krabicek daneho druhu
 EXPLAIN PLAN FOR
-SELECT L.DRUH, SUM(TL.POCET_BALENI) FROM LEK L
-NATURAL JOIN TERMIN_LEK TL
-GROUP BY L.DRUH,  TL.POCET_BALENI;
+SELECT DRUH, SUM(POCET_BALENI) FROM LEK
+NATURAL JOIN TERMIN_LEK
+GROUP BY DRUH, POCET_BALENI;
 
 -- vypis defaultniho planu na select
 SELECT * FROM TABLE(DBMS_XPLAN.display);
