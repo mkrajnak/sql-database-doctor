@@ -59,7 +59,7 @@ CREATE TABLE EXTERNI (
 
 CREATE TABLE VYKON (
 	ID_VYKONU		INT NOT NULL,
-	NAZEV			VARCHAR(30) NOT NULL,
+	NAZEV_VYKONU	VARCHAR(30) NOT NULL,
 	EXPIRACE		INT NULL
 );
 
@@ -204,11 +204,11 @@ INSERT INTO LEK VALUES(lek_seq.nextval, 'ASPIRIN PROTECT 100','Analgetikum', 'tb
 INSERT INTO LEK VALUES(lek_seq.nextval, 'UNASYN','Antibiotikum', 'tbl obd 12x375 mg');
 INSERT INTO LEK VALUES(lek_seq.nextval, 'Avandamet','Antidiabetikum', 'tbl flm 112 (4 mg/1000 mg)');
 INSERT INTO LEK VALUES(lek_seq.nextval, 'Dietetické potraviny','APROMIX','1x1000 g');
-INSERT INTO LEK VALUES(lek_seq.nextval, 'KLACID 500','Antibiotiká', 'tbl flm 14x500 mg');
-INSERT INTO LEK VALUES(lek_seq.nextval, 'OSPEN 1000','Antibiotiká', 'tbl obd 12x375 mg');
+INSERT INTO LEK VALUES(lek_seq.nextval, 'KLACID 500','Antibiotikum', 'tbl flm 14x500 mg');
+INSERT INTO LEK VALUES(lek_seq.nextval, 'OSPEN 1000','Antibiotikum', 'tbl obd 12x375 mg');
 INSERT INTO LEK VALUES(lek_seq.nextval, 'LEKOPTIN','Gynekologiká ', 'tbl flm 112 (4 mg/1000 mg)');
 -- test triggeru
-INSERT INTO LEK VALUES(NULL, 'FRAMYKOIN','Antibiotiká','1x1000 g');
+INSERT INTO LEK VALUES(NULL, 'FRAMYKOIN','Antibiotikum','1x1000 g');
 
 INSERT INTO FAKTURA VALUES(faktura_seq.nextval, TO_DATE('01042016','DD-MM-YYYY'), 800, 0, 1);
 INSERT INTO FAKTURA VALUES(faktura_seq.nextval, TO_DATE('02042016','DD-MM-YYYY'), 600, 300, 2);
@@ -269,7 +269,7 @@ WHERE (l.pocet_baleni >= 2 AND lek.druh = 'Antibiotikum');
 SELECT p.jmeno AS "Jméno", p.prijmeni AS "Příjmení", t.datum_cas AS "Datum a čas", v.expirace AS "Expirace"
 FROM PACIENT p JOIN termin t ON t.id_pacient = p.id_rc join TERMIN_VYKON tv on tv.id_terminu = t.id_terminu join vykon v on v.id_vykonu = tv.id_vykonu
 WHERE EXISTS (SELECT * FROM VYKON
- 							WHERE v.nazev LIKE 'Očkování');
+ 							WHERE v.NAZEV_VYKONU LIKE 'Očkování');
 
 -- vypise lek ktereho se predepsalo nejvice krabicek
 SELECT lek.nazev AS "Název léku" , SUM(pocet_baleni) AS Pocet_baleni
@@ -294,7 +294,7 @@ FROM PACIENT p, TERMIN n, TERMIN_VYKON tv, VYKON v
 WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND EXTRACT(YEAR FROM n.datum_cas) = EXTRACT(YEAR FROM CURRENT_DATE) AND p.id_rc NOT IN
 (	SELECT DISTINCT p.id_rc
 	FROM PACIENT p, TERMIN n, TERMIN_VYKON tv, VYKON v
-	WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND v.nazev LIKE 'Prohlídka'
+	WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = n.id_terminu AND v.nazev_VYKONU LIKE 'Prohlídka'
 );
 
 -- PROJEKT 4
@@ -434,6 +434,46 @@ EXCEPTION
 	  WHEN OTHERS THEN
 	    Raise_Application_Error (-20206, 'Error!');
 END;
-/
+
 -- demonstracia procedury
 exec rocniZuctovani('111','2016');
+
+-----------------------------PROCEDURA 2---------------------------------------
+-- parametrom je druh lieku, procedura vypise vykony ku ktorym bol liek predpisanych
+-- a spocita ake % zastupenie ma tato skupina medzi vsetkymi predpisanymi liekmi
+SET serveroutput ON;
+CREATE OR REPLACE PROCEDURE analyzaDruhuLeku(druh_leku IN VARCHAR2)
+is
+  cursor zaznam is
+    SELECt * FROM LEK JOIN TERMIN_LEK ON LEK.id_leku = TERMIN_LEK.id_leku
+      JOIN TERMIN_VYKON ON TERMIN_LEK.id_terminu = TERMIN_VYKON.id_terminu
+      JOIN VYKON ON TERMIN_VYKON.id_vykonu = VYKON.id_vykonu;
+    p_zaznam zaznam%ROWTYPE;
+    leky NUMBER;
+    druh NUMBER;
+    jmeno_vykonu VYKON.NAZEV_VYKONU%TYPE;
+BEGIN
+  leky := 0;
+  druh := 0;
+  dbms_output.put_line('Lieky zo skupiny: ' || druh_leku || ' boli predpisane pre vykony:');
+  OPEN zaznam;
+  LOOP
+    FETCH ZAZNAM INTO P_ZAZNAM;
+    EXIT WHEN zaznam%NOTFOUND;
+    IF (p_zaznam.druh = druh_leku) THEN --cielova skupina
+      SELECT nazev_vykonu INTO jmeno_vykonu FROM VYKON WHERE P_ZAZNAM.nazev_vykonu = VYKON.nazev_vykonu;
+      dbms_output.put_line(jmeno_vykonu);
+      druh := druh + 1;
+    END IF;
+    leky := leky + 1;
+  END LOOP;
+  CLOSE zaznam;
+  dbms_output.put_line('Lieky zo skupiny: ' || druh_leku || ' tvoria v databaze ' || (druh * 100)/leky || '% predpisanych liekov.');
+EXCEPTION
+    WHEN ZERO_DIVIDE THEN
+      dbms_output.put_line('Lieky zo skupiny: ' || druh_leku || ' tvoria v databaze 0 % predpisanych liekov.');
+	  WHEN OTHERS THEN
+	    Raise_Application_Error (-20206, 'Error!');
+END;
+/
+exec analyzaDruhuLeku('Antibiotikum');
