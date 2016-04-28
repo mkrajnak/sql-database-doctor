@@ -306,10 +306,14 @@ WHERE n.id_pacient = p.id_rc AND tv.id_vykonu = v.id_vykonu AND tv.id_terminu = 
 
 -- klasicky vypis:
 -- druhy leku a pocet predepsnaych krabicek daneho druhu
+DROP INDEX DRUH_LEKU;
+
+-- klasicky vypis:
+-- druhy leku a pocet predepsnaych krabicek daneho druhu
 EXPLAIN PLAN FOR
 SELECT L.DRUH, SUM(TL.POCET_BALENI) FROM LEK L
 NATURAL JOIN TERMIN_LEK TL
-GROUP BY (L.DRUH);
+GROUP BY L.DRUH,  TL.POCET_BALENI;
 
 -- vypis defaultniho planu na select
 SELECT * FROM TABLE(DBMS_XPLAN.display);
@@ -319,9 +323,9 @@ CREATE INDEX DRUH_LEKU ON LEK (DRUH);
 
 -- novy plan s vyuzitim indexu
 EXPLAIN PLAN FOR
-SELECT /*+ INDEX(LEK DRUH_LEKU)*/ L.DRUH, SUM(TL.POCET_BALENI) FROM LEK L
-NATURAL JOIN TERMIN_LEK TL
-GROUP BY (L.DRUH);
+SELECT /*+ INDEX(LEK DRUH_LEKU)*/ DRUH, SUM(POCET_BALENI) FROM LEK
+NATURAL JOIN TERMIN_LEK
+GROUP BY DRUH, POCET_BALENI;
 
 -- vypis planu pri uziti indexu
 -- sice se zvysil pocet operace ale narocnost novych operaci je nizsi
